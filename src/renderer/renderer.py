@@ -74,7 +74,7 @@ class Renderer(nn.Module):
             faces = keep_vertices_and_update_faces(faces[0], self.final_mask).unsqueeze(0)
 
             colors = colors[:, self.final_mask, :]
-        self.only_head_faces = faces
+
         self.register_buffer('faces', faces)
 
         face_colors = face_vertices(colors, faces)
@@ -107,7 +107,7 @@ class Renderer(nn.Module):
             transformed_landmarks[key][:, :, 1:] = - transformed_landmarks[key][:, :, 1:]
             transformed_landmarks[key] = transformed_landmarks[key][...,:2]
 
-        rendered_img, verticies_only_face = self.render(vertices, transformed_vertices)
+        rendered_img = self.render(vertices, transformed_vertices)
 
         outputs = {
             'rendered_img': rendered_img,
@@ -139,7 +139,7 @@ class Renderer(nn.Module):
         if not self.render_full_head:
             transformed_vertices = transformed_vertices[:,self.final_mask,:]
             vertices = vertices[:,self.final_mask,:]
-            
+
         ## rasterizer near 0 far 100. move mesh so minz larger than 0
         transformed_vertices[:,:,2] = transformed_vertices[:,:,2] + 10
         
@@ -165,9 +165,7 @@ class Renderer(nn.Module):
         shading_images = shading.reshape([batch_size, albedo_images.shape[2], albedo_images.shape[3], 3]).permute(0,3,1,2).contiguous()        
         shaded_images = albedo_images*shading_images
         
-        only_face_verticies = vertices
-        
-        return shaded_images, only_face_verticies
+        return shaded_images
 
 
     def rasterize(self, vertices, faces, attributes=None, h=None, w=None):

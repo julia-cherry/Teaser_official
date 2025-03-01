@@ -44,8 +44,6 @@ train:
     expression_distangled_mse_loss: 1.0
     distangled_cycle_loss_except_token: 1.0
     landmark_total_loss: 10.0
-    landmark_loss_mp_mouth: 100.0
-    landmark_loss_fan_mouth: 100.0
     landmark_loss_203: 1000.0
 
   optimize_pose: False

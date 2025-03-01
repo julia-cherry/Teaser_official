@@ -36,44 +36,39 @@ bash quick_install.sh
 ```
 *The above installation includes downloading the [FLAME](https://flame.is.tue.mpg.de/) model. This requires registration. If you do not have an account you can register at [https://flame.is.tue.mpg.de/](https://flame.is.tue.mpg.de/)*
 
-The Teaser pretrained model which can also be found on Google Drive.
-
-Note:We have provided two versions on the pretrained model. Compared to v1, v2 incorporates our pose-dependent landmark loss.
-
+The Teaser pretrained model and our 203 landmark model can also be found on Google Drive.
 
 
 ## Demo 
 We provide several demos. One you can test the model on a single image by 
 
 ```bash
-python test_image.py --input_path samples/test_image_1.jpg --out_path results/ --checkpoint pretrained_models/TEASER_v1.pt --crop --use_smirk_generator
+python test_image.py --input_path samples/1.jpg --out_path results/ --checkpoint pretrained_models/TEASER.pt --crop --use_teaser_generator
 ```
 
 you can test the model on several videos by
 
 ```bash
-python demo_video.py --input_path samples/demo_videos --out_path results/reconstruct_videos --checkpoint pretrained_models/TEASER_v1.pt --crop --use_smirk_generator
+python demo_video.py --input_path samples/demo_videos --out_path results/reconstruct_videos --checkpoint pretrained_models/TEASER_v1.pt --crop --use_teaser_generator
 ```
 
 if you want to swap a single face by swapping tokens, you can use
 
 ```bash
-python test_image_swap_token.py --input_path_source samples/swap_token/1.jpg  --input_path_target samples/swap_token/2.jpg --out_path results/ --checkpoint pretrained_
-models/TEASER_v1.pt  --crop  --use_smirk_generator
+python test_image_swap_token.py --input_path_source samples/swap_token/1.jpg  --input_path_target samples/swap_token/2.jpg --out_path results/ --checkpoint pretrained_models/TEASER_v1.pt  --crop  --use_teaser_generator
 ```
 
 or if you want to swap videos by swapping tokens, you can use
 
 ```bash
-python demo_video_swap_token.py --input_image_path samples/swap_token/1.jpg  --input_videos_path samples/swap_token/videos --out_path results/swap_videos --checkpoint pretrained_
-models/TEASER_v1.pt  --crop --use_smirk_generator
+python demo_video_swap_token.py --input_image_path samples/swap_token/1.jpg  --input_videos_path samples/swap_token/videos --out_path results/swap_videos --checkpoint pretrained_models/TEASER_v1.pt  --crop --use_teaser_generator
 ```
 
 
 or if you want to swap expressions, you can use
 
 ```bash
-python test_image_swap_expression.py --input_path_source samples/swap_expression/1.jpg --input_path_target samples/swap_expression/2.jpg  --out_path results/ --checkpoint pretrained_models/TEASER_v1.pt  --crop --render_orig --use_smirk_generator
+python test_image_swap_expression.py --input_path_source samples/swap_expression/1.jpg --input_path_target samples/swap_expression/2.jpg  --out_path results/ --checkpoint pretrained_models/TEASER_v1.pt  --crop --render_orig --use_teaser_generator
 ```
 
 

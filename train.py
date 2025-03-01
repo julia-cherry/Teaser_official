@@ -2,7 +2,7 @@ import sys
 from omegaconf import OmegaConf
 import torch
 from tqdm import tqdm
-from src.smirk_trainer import SmirkTrainer
+from src.teaser_trainer import TeaserTrainer
 import os
 from datasets.data_utils import load_dataloaders
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     train_loader, val_loader = load_dataloaders(config)
 
-    trainer = SmirkTrainer(config)
+    trainer = TeaserTrainer(config)
     trainer = trainer.to(config.device)
 
     if config.resume:
@@ -60,31 +60,16 @@ if __name__ == '__main__':
     trainer.create_base_encoder()
     
     
-    # for batch_idx, batch in tqdm(enumerate(loader), total=len(loader)):
-    #     continue
-    
-    # print('----****-----')
-    # print(f"train = {len(train_loader)}, valid={len(val_loader)}")
-    # print(config.train.batch_size)
-    # exit()
     losses_AM_l1_train = AverageMeter()
-    losses_AM_per_train = AverageMeter()
     losses_AM_l1_val = AverageMeter()
+    losses_AM_per_train = AverageMeter()
     losses_AM_per_val = AverageMeter()
     losses_AM_token_cycle_train = AverageMeter()
     losses_AM_token_cycle_val = AverageMeter()
-    losses_AM_landmark_train = AverageMeter()
-    losses_AM_landmark_val = AverageMeter()
-    losses_AM_landmark_mouth_fan_train = AverageMeter()
-    losses_AM_landmark_mouth_mp_train = AverageMeter()
-    losses_AM_landmark_mouth_fan_val = AverageMeter()
-    losses_AM_landmark_mouth_mp_val = AverageMeter()
-    # losses_AM_token_distangled_mse_train = AverageMeter()
-    # losses_AM_token_distangled_mse_val = AverageMeter()
-    # losses_AM_token_distangled_csim_train = AverageMeter()
-    # losses_AM_token_distangled_csim_val = AverageMeter()
-    # losses_AM_token_distangled_cycle_except_token_train = AverageMeter()
-    # losses_AM_token_distangled_cycle_except_token_val = AverageMeter()
+    losses_AM_region_train = AverageMeter()
+    losses_AM_region_val = AverageMeter()
+    losses_AM_203_landmark_train = AverageMeter()
+    losses_AM_203_landmark_val = AverageMeter()
     
     for epoch in range(config.train.resume_epoch, config.train.num_epochs):
         
@@ -103,9 +88,9 @@ if __name__ == '__main__':
                 for key in batch:
                     batch[key] = batch[key].to(config.device)
                 if phase == 'train':
-                    outputs = trainer.step(batch, batch_idx, losses_AM_l1_train, losses_AM_per_train, losses_AM_token_cycle_train, losses_AM_landmark_train, losses_AM_landmark_mouth_fan_train, losses_AM_landmark_mouth_mp_train, phase=phase)
+                    outputs = trainer.step(batch, batch_idx, losses_AM_l1_train, losses_AM_per_train, losses_AM_token_cycle_train, losses_AM_region_train, losses_AM_203_landmark_train, phase=phase)
                 if phase == 'val':
-                    outputs = trainer.step(batch, batch_idx, losses_AM_l1_val, losses_AM_per_val, losses_AM_token_cycle_val, losses_AM_landmark_val, losses_AM_landmark_mouth_fan_val, losses_AM_landmark_mouth_mp_val, phase=phase)
+                    outputs = trainer.step(batch, batch_idx, losses_AM_l1_val, losses_AM_per_val, losses_AM_token_cycle_val, losses_AM_region_val, losses_AM_203_landmark_val, phase=phase)
 
                 if batch_idx % config.train.visualize_every == 0:
                     with torch.no_grad():

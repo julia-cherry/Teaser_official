@@ -2,7 +2,7 @@ import torch
 import cv2
 import numpy as np
 from skimage.transform import estimate_transform, warp
-from src.smirk_encoder import SmirkEncoder
+from src.teaser_encoder import TeaserEncoder
 from src.FLAME.FLAME import FLAME
 from src.renderer.renderer import Renderer
 import argparse
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default='', help='Path to the checkpoint')
     parser.add_argument('--crop', action='store_true', help='Crop the face using mediapipe')
     parser.add_argument('--out_path', type=str, default='', help='Path to save the output (will be created if not exists)')
-    parser.add_argument('--use_smirk_generator', action='store_true', help='Use SMIRK neural image to image translator to reconstruct the image')
+    parser.add_argument('--use_teaser_generator', action='store_true', help='Use TEASER neural image to image translator to reconstruct the image')
     parser.add_argument('--render_orig', action='store_true', help='Present the result w.r.t. the original image/video size')
 
     args = parser.parse_args()
@@ -54,20 +54,20 @@ if __name__ == '__main__':
     
 
     # ----------------------- initialize configuration ----------------------- #
-    smirk_encoder = SmirkEncoder().to(args.device)
+    teaser_encoder = TeaserEncoder().to(args.device)
     checkpoint = torch.load(args.checkpoint)
-    checkpoint_encoder = {k.replace('smirk_encoder.', ''): v for k, v in checkpoint.items() if 'smirk_encoder' in k} # checkpoint includes both smirk_encoder and smirk_generator
+    checkpoint_encoder = {k.replace('teaser_encoder.', ''): v for k, v in checkpoint.items() if 'teaser_encoder' in k} # checkpoint includes both teaser_encoder and teaser_generator
 
-    smirk_encoder.load_state_dict(checkpoint_encoder)
-    smirk_encoder.eval()
+    teaser_encoder.load_state_dict(checkpoint_encoder)
+    teaser_encoder.eval()
 
-    if args.use_smirk_generator:
-        from src.smirk_generator import SmirkGenerator
-        smirk_generator = SmirkGenerator(in_channels=6, out_channels=3, init_features=32, res_blocks=5).to(args.device)
+    if args.use_teaser_generator:
+        from src.teaser_generator import TeaserGenerator
+        teaser_generator = TeaserGenerator(in_channels=6, out_channels=3, init_features=32, res_blocks=5).to(args.device)
 
-        checkpoint_generator = {k.replace('smirk_generator.', ''): v for k, v in checkpoint.items() if 'smirk_generator' in k} # checkpoint includes both smirk_encoder and smirk_generator
-        smirk_generator.load_state_dict(checkpoint_generator)
-        smirk_generator.eval()
+        checkpoint_generator = {k.replace('teaser_generator.', ''): v for k, v in checkpoint.items() if 'teaser_generator' in k} # checkpoint includes both teaser_encoder and teaser_generator
+        teaser_generator.load_state_dict(checkpoint_generator)
+        teaser_generator.eval()
 
         # load also triangle probabilities for sampling points on the image
         face_probabilities = masking_utils.load_probabilities_per_FLAME_triangle()  
@@ -99,7 +99,7 @@ if __name__ == '__main__':
                 out_width = input_image_size
                 out_height = input_image_size
 
-            if args.use_smirk_generator:
+            if args.use_teaser_generator:
                 out_width *= 3
             else:
                 out_width *= 2
@@ -149,7 +149,7 @@ if __name__ == '__main__':
                 cropped_image = torch.tensor(cropped_image).permute(2,0,1).unsqueeze(0).float()/255.0
                 cropped_image = cropped_image.to(args.device)
 
-                outputs = smirk_encoder(cropped_image)
+                outputs = teaser_encoder(cropped_image)
                 
                 out_coeffs.append({k: v.cpu().detach().numpy() for k, v in outputs.items()})
                 flame_output = flame.forward(outputs)
@@ -175,9 +175,9 @@ if __name__ == '__main__':
           
 
                 # ---- create the neural renderer reconstructed img ---- #
-                if args.use_smirk_generator:
+                if args.use_teaser_generator:
                     if (kpt_mediapipe is None):
-                        print('Could not find landmarks for the image using mediapipe and cannot create the hull mask for the smirk generator. Exiting...')
+                        print('Could not find landmarks for the image using mediapipe and cannot create the hull mask for the teaser generator. Exiting...')
                         exit()
 
                     mask_ratio_mul = 5
@@ -193,10 +193,10 @@ if __name__ == '__main__':
                     # extra_points = cropped_image * pmask
                     masked_img = masking_utils.masking_face(cropped_image, hull_mask, mask_dilation_radius, rendered_mask=rendered_mask)
 
-                    smirk_generator_input = torch.cat([rendered_img, masked_img], dim=1)
+                    teaser_generator_input = torch.cat([rendered_img, masked_img], dim=1)
 
                     
-                    reconstructed_img = smirk_generator(smirk_generator_input, outputs['token'])
+                    reconstructed_img = teaser_generator(teaser_generator_input, outputs['token'])
 
                     if args.render_orig:
                         if args.crop:

@@ -63,18 +63,15 @@ import cv2
 from torchvision.utils import make_grid
 
 
-def batch_draw_keypoints(images, landmarks, color=(255, 255, 255), radius=2):
-    # if isinstance(landmarks, torch.Tensor):
-    #     print('-----------')
-    #     landmarks = landmarks.cpu().numpy()
-    #     landmarks = landmarks.copy()*112 + 112
-    landmarks = [landmark.cpu().numpy().copy()*112 + 112  for landmark in landmarks]
+def batch_draw_keypoints(images, landmarks, color=(255, 255, 255), radius=1):
+    if isinstance(landmarks, torch.Tensor):
+        landmarks = landmarks.cpu().numpy()
+        landmarks = landmarks.copy()*112 + 112
 
     if isinstance(images, torch.Tensor):
         images = images.cpu().numpy().transpose(0, 2, 3, 1)
         images = (images * 255).astype('uint8')
         images = np.ascontiguousarray(images[..., ::-1])
-    
 
     plotted_images = []
     for image, landmark in zip(images, landmarks):

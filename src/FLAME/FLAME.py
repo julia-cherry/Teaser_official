@@ -25,8 +25,6 @@ np.unicode = np.unicode_
 np.str = np.str_
 import pickle
 import torch.nn.functional as F
-import os.path as osp
-import os
 
 from .lbs import lbs, batch_rodrigues, vertices2landmarks, rot_mat_to_euler
 
@@ -113,17 +111,6 @@ class FLAME(nn.Module):
         lmk_embeddings_mp = np.load("assets/mediapipe_landmark_embedding/mediapipe_landmark_embedding.npz")
         self.register_buffer('mp_lmk_faces_idx', torch.from_numpy(lmk_embeddings_mp['lmk_face_idx'].astype('int32')).long())
         self.register_buffer('mp_lmk_bary_coords', torch.from_numpy(lmk_embeddings_mp['lmk_b_coords']).to(self.dtype))
-        
-        self.using_lmk203 = False
-        lmk203_path = 'datasets/preprocess_scripts/203_landmark_embeding_new.npz'
-        if os.path.exists(lmk203_path):
-            self.using_lmk203 = True
-            lmk_embeddings_203 = np.load(lmk203_path)
-            self.register_buffer('lmk_203_faces_idx', torch.from_numpy(lmk_embeddings_203['lmk_face_idx'].astype('int32')).long())
-            self.register_buffer('lmk_203_bary_coords', torch.from_numpy(lmk_embeddings_203['lmk_b_coords']).to(self.dtype))
-            self.lmk_203_front_indices = lmk_embeddings_203['landmark_front_indices']
-            self.lmk_203_left_indices  = lmk_embeddings_203['landmark_left_indices']
-            self.lmk_203_right_indices = lmk_embeddings_203['landmark_right_indices']
 
 
 
@@ -315,31 +302,16 @@ class FLAME(nn.Module):
         landmarks3d = vertices2landmarks(vertices, self.faces_tensor,
                                        self.full_lmk_faces_idx.repeat(bz, 1),
                                        self.full_lmk_bary_coords.repeat(bz, 1, 1))
-    
+        
         landmarksmp = vertices2landmarks(vertices, self.faces_tensor,
                                        self.mp_lmk_faces_idx.repeat(vertices.shape[0], 1),
                                        self.mp_lmk_bary_coords.repeat(vertices.shape[0], 1, 1))
-        
-        if self.using_lmk203:
-            landmarks203 = vertices2landmarks(vertices, self.faces_tensor,
-                                        self.lmk_203_faces_idx.repeat(vertices.shape[0], 1),
-                                        self.lmk_203_bary_coords.repeat(vertices.shape[0], 1, 1))
-            return {
+
+        return {
             'vertices': vertices, 
             'landmarks_fan': landmarks2d, 
             'landmarks_fan_3d': landmarks3d, 
-            'landmarks_mp': landmarksmp,
-            'landmarks_203': landmarks203,
-            'faces':  self.faces_tensor
-        }
-            
-        else:
-            return {
-            'vertices': vertices, 
-            'landmarks_fan': landmarks2d, 
-            'landmarks_fan_3d': landmarks3d, 
-            'landmarks_mp': landmarksmp, 
-            'faces':  self.faces_tensor
+            'landmarks_mp': landmarksmp
         }
 
 

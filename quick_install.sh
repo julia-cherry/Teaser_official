@@ -19,24 +19,17 @@ rm FLAME2020.zip
 echo -e "\nDownloading Mediapipe Face Mesh model..."
 wget https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task --directory-prefix assets/
 
-# Download SMIRK pretrained model
-echo -e "\nDownload pretrained SMIRK model..."
-mkdir -p pretrained_models/
-gdown --id 1T65uEd9dVLHgVw5KiUYL66NUee-MCzoE -O pretrained_models/
 
 
-
-# The rest of the files are needed for training
-echo -e "\n Now downloading the files needed if you want to train SMIRK..."
 
 # Download expression templates
-echo -e "\nDownload expression templates for SMIRK training..."
+echo -e "\nDownload expression templates for Teaser training..."
 gdown --id 1wEL7KPHw2kl5DxP0UAB3h9QcQLXk7BM_
 unzip -q expression_templates_famos.zip -d assets/
 rm expression_templates_famos.zip
 
 # Download EMOCA for expression loss
-echo "To download the Emotion Recognition from EMOCA which is used from SMIRK for expression loss, please register at:",
+echo "To download the Emotion Recognition from EMOCA which is used from Teaser for expression loss, please register at:",
 echo -e '\e]8;;https://emoca.is.tue.mpg.de\ahttps://emoca.is.tue.mpg.de\e]8;;\a'
 while true; do
     read -p "I have registered and agreed to the license terms at https://emoca.is.tue.mpg.de? (y/n)" yn

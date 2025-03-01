@@ -106,13 +106,13 @@ class BaseTrainer(nn.Module):
         else:
             params = []
             if self.config.train.optimize_expression:
-                params += list(self.smirk_encoder.expression_encoder.parameters()) 
+                params += list(self.teaser_encoder.expression_encoder.parameters()) 
             if self.config.train.optimize_shape:
-                params += list(self.smirk_encoder.shape_encoder.parameters())
+                params += list(self.teaser_encoder.shape_encoder.parameters())
             if self.config.train.optimize_pose:
-                params += list(self.smirk_encoder.pose_encoder.parameters())
+                params += list(self.teaser_encoder.pose_encoder.parameters())
             if self.config.train.optimize_token:
-                params += list(self.smirk_encoder.token_encoder.parameters())
+                params += list(self.teaser_encoder.token_encoder.parameters())
 
             self.encoder_optimizer = torch.optim.Adam(params, lr= encoder_scale * self.config.train.lr)
                 
@@ -122,14 +122,14 @@ class BaseTrainer(nn.Module):
 
         if self.config.arch.enable_fuse_generator:
             if hasattr(self, 'fuse_generator_optimizer'):
-                for g in self.smirk_generator_optimizer.param_groups:
+                for g in self.teaser_generator_optimizer.param_groups:
                     g['lr'] = self.config.train.lr
             else:
                 print('--*****--')
-                self.smirk_generator_optimizer = torch.optim.Adam(self.smirk_generator.parameters(), lr= self.config.train.lr, betas=(0.5, 0.999))
+                self.teaser_generator_optimizer = torch.optim.Adam(self.teaser_generator.parameters(), lr= self.config.train.lr, betas=(0.5, 0.999))
 
             
-            self.smirk_generator_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.smirk_generator_optimizer, T_max=n_steps,
+            self.teaser_generator_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(self.teaser_generator_optimizer, T_max=n_steps,
                                                                                     eta_min=0.01 * self.config.train.lr)
 
         
@@ -151,12 +151,12 @@ class BaseTrainer(nn.Module):
         for param in self.vgg_loss.parameters():
             param.requires_grad_(False)
         
+        #network of extracting 203 landmarks    
         from onnx2torch import convert
 
         self.landmark_torch_model = convert('datasets/preprocess_scripts/landmark.onnx')
         for param in self.landmark_torch_model.parameters():
             param.requires_grad_(False)
-        
         
             
         if self.config.train.loss_weights['emotion_loss'] > 0:
@@ -180,28 +180,28 @@ class BaseTrainer(nn.Module):
     def scheduler_step(self):
         self.encoder_scheduler.step()
         if self.config.arch.enable_fuse_generator:
-            self.smirk_generator_scheduler.step()
+            self.teaser_generator_scheduler.step()
 
     def train(self):
-        self.smirk_encoder.train()
+        self.teaser_encoder.train()
         if self.config.arch.enable_fuse_generator:
-            self.smirk_generator.train()
+            self.teaser_generator.train()
     
     def eval(self):
-        self.smirk_encoder.eval()
+        self.teaser_encoder.eval()
         if self.config.arch.enable_fuse_generator:
-            self.smirk_generator.eval()
+            self.teaser_generator.eval()
 
     def optimizers_zero_grad(self):
         self.encoder_optimizer.zero_grad()
         if self.config.arch.enable_fuse_generator:
-            self.smirk_generator_optimizer.zero_grad()
+            self.teaser_generator_optimizer.zero_grad()
 
     def optimizers_step(self, step_encoder=True, step_fuse_generator=True):
         if step_encoder:
             self.encoder_optimizer.step()
         if step_fuse_generator and self.config.arch.enable_fuse_generator:
-            self.smirk_generator_optimizer.step()
+            self.teaser_generator_optimizer.step()
 
 
     def save_visualizations(self, outputs, save_path, show_landmarks=False):
@@ -212,10 +212,10 @@ class BaseTrainer(nn.Module):
             outputs['overlap_image_pixels'] = outputs['img'] * 0.7 +  0.3 * outputs['masked_1st_path']
         
         if show_landmarks:
-            # original_img_with_landmarks = batch_draw_keypoints(outputs['img'], outputs['landmarks_mp'], color=(0,255,0))
             original_img_with_landmarks = batch_draw_keypoints(outputs['img'], outputs['landmarks_203'], color=(0,255,0))    #绿色
-            # original_img_with_landmarks = batch_draw_keypoints(original_img_with_landmarks, outputs['landmarks_mp_gt'], color=(0,0,255))
             original_img_with_landmarks = batch_draw_keypoints(original_img_with_landmarks, outputs['landmarks_203_gt'], color=(0,0,255))  #红色
+            original_img_with_landmarks = batch_draw_keypoints(outputs['img'], outputs['landmarks_mp'], color=(0,255,0))
+            original_img_with_landmarks = batch_draw_keypoints(original_img_with_landmarks, outputs['landmarks_mp_gt'], color=(0,0,255))
             original_img_with_landmarks = batch_draw_keypoints(original_img_with_landmarks, outputs['landmarks_fan'][:,:17], color=(255,0,255))
             original_img_with_landmarks = batch_draw_keypoints(original_img_with_landmarks, outputs['landmarks_fan_gt'][:,:17], color=(255,255,255))
             original_grid = make_grid_from_opencv_images(original_img_with_landmarks, nrow=nrow)
@@ -306,17 +306,17 @@ class BaseTrainer(nn.Module):
         return visualizations
 
     def save_model(self, state_dict, save_path):
-        # remove everything that is not smirk_encoder or smirk_generator
+        # remove everything that is not teaser_encoder or teaser_generator
         new_state_dict = {}
         for key in list(state_dict.keys()):
-            if key.startswith('smirk_encoder') or key.startswith('smirk_generator'):
+            if key.startswith('teaser_encoder') or key.startswith('teaser_generator'):
                 new_state_dict[key] = state_dict[key]
 
         torch.save(new_state_dict, save_path)
 
 
     def create_base_encoder(self):
-        self.base_encoder = copy.deepcopy(self.smirk_encoder)
+        self.base_encoder = copy.deepcopy(self.teaser_encoder)
         self.base_encoder.eval()
 
 
@@ -329,11 +329,11 @@ class BaseTrainer(nn.Module):
         filtered_state_dict = {}
         for key in loaded_state_dict.keys():
             # new
-            if (load_encoder and key.startswith('smirk_encoder')) or (load_fuse_generator and key.startswith('smirk_generator')):
+            if (load_encoder and key.startswith('teaser_encoder')) or (load_fuse_generator and key.startswith('teaser_generator')):
                 filtered_state_dict[key] = loaded_state_dict[key]
             
 
-        self.load_state_dict(filtered_state_dict, strict=False) # set it false because it asks for mica and other models apart from smirk_encoder and smirk_generator
+        self.load_state_dict(filtered_state_dict, strict=False) # set it false because it asks for mica and other models apart from teaser_encoder and teaser_generator
 
 
 
