@@ -36,7 +36,7 @@ bash quick_install.sh
 ```
 *The above installation includes downloading the [FLAME](https://flame.is.tue.mpg.de/) model. This requires registration. If you do not have an account you can register at [https://flame.is.tue.mpg.de/](https://flame.is.tue.mpg.de/)*
 
-The Teaser pretrained model and our 203 landmark model can also be found on Google Drive.
+The Teaser pretrained model and our 203 landmark model can also be found on [Google Drive](https://drive.google.com/drive/folders/1WhTjAZIQBCZqDRziu8_ZBtMC736K9T2A?usp=drive_link).
 
 
 ## Demo 

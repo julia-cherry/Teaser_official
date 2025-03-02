@@ -20,6 +20,10 @@ echo -e "\nDownloading Mediapipe Face Mesh model..."
 wget https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task --directory-prefix assets/
 
 
+echo -e "\nDownloading pretrained model..."
+mkdir -p pretrained_models && cd pretrained_models
+gdown 1SjYuCfDf5ElxK3VNvcF7KPBR57EIRDSY
+cd ..
 
 
 # Download expression templates
@@ -47,6 +51,11 @@ rm ResNet50.zip
 # Download MICA
 echo -e "\nDownloading MICA..."
 wget -O assets/mica.tar "https://keeper.mpdl.mpg.de/f/db172dc4bd4f4c0f96de/?dl=1"
+
+# Download 203 landmarks for preprocessing dataset
+mkdir -p datasets/preprocess_scripts && cd datasets/preprocess_scripts
+gdown 1Zu9Vj4f14l7RGD5I5G3iHsL5vEc9YkLW
+cd ../..
 
 
 echo -e "\nFinished downloading all files."
