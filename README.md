@@ -4,7 +4,7 @@
 This repository is the official implementation of the ICLR 2025 paper [TEASER: Token Enhanced Spatial Modeling For Expressions Reconstruction](https://arxiv.org/abs/2502.10982).
 
 <p align="center">
-  <a href='https://arxiv.org/abs/2404.04104' style='padding-left: 0.5rem;'>
+  <a href='https://arxiv.org/abs/2502.10982' style='padding-left: 0.5rem;'>
     <img src='https://img.shields.io/badge/arXiv-2502.10982-brightgreen' alt='arXiv'>
   </a>
   <a href='https://julia-cherry.github.io/TEASER-PAGE/' style='padding-left: 0.5rem;'>
